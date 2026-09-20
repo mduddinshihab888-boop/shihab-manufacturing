@@ -1,0 +1,390 @@
+
+name: Build Complete Shihab Manufacturing Game
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  generate-and-build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Set up Java JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Generate Complete Game Source Files
+      run: |
+        mkdir -p app/src/main/java/com/shihab/manufacturing
+        mkdir -p app/src/main/res/layout
+        mkdir -p app/src/main/res/values
+
+        cat << 'EOF' > settings.gradle
+        pluginManagement {
+            repositories {
+                google()
+                mavenCentral()
+                gradlePluginPortal()
+            }
+        }
+        dependencyResolutionManagement {
+            repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+            repositories {
+                google()
+                mavenCentral()
+            }
+        }
+        rootProject.name = "Shihab Manufacturing"
+        include ':app'
+        EOF
+
+        cat << 'EOF' > build.gradle
+        buildscript {
+            repositories {
+                google()
+                mavenCentral()
+            }
+            dependencies {
+                classpath 'com.android.tools.build:gradle:8.2.2'
+                classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.22'
+            }
+        }
+        tasks.register('clean', Delete) {
+            delete rootProject.buildDir
+        }
+        EOF
+
+        cat << 'EOF' > app/build.gradle
+        plugins {
+            id 'com.android.application'
+            id 'org.jetbrains.kotlin.android'
+        }
+        android {
+            namespace 'com.shihab.manufacturing'
+            compileSdk 34
+            defaultConfig {
+                applicationId "com.shihab.manufacturing"
+                minSdk 26
+                targetSdk 34
+                versionCode 1
+                versionName "1.0.0"
+            }
+            buildTypes {
+                release {
+                    minifyEnabled false
+                }
+            }
+            compileOptions {
+                sourceCompatibility JavaVersion.VERSION_17
+                targetCompatibility JavaVersion.VERSION_17
+            }
+            kotlinOptions {
+                jvmTarget = '17'
+            }
+        }
+        dependencies {
+            implementation 'androidx.core:core-ktx:1.12.0'
+            implementation 'androidx.appcompat:appcompat:1.6.1'
+            implementation 'com.google.android.material:material:1.11.0'
+        }
+        EOF
+
+        cat << 'EOF' > app/src/main/AndroidManifest.xml
+        <?xml version="1.0" encoding="utf-8"?>
+        <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+            <uses-feature android:glEsVersion="0x00030000" android:required="true" />
+            <application
+                android:allowBackup="true"
+                android:icon="@mipmap/ic_launcher"
+                android:label="@string/app_name"
+                android:supportsRtl="true"
+                android:theme="@style/Theme.AppCompat.NoActionBar">
+                <activity
+                    android:name=".MainActivity"
+                    android:exported="true"
+                    android:screenOrientation="landscape">
+                    <intent-filter>
+                        <action android:name="android.intent.action.MAIN" />
+                        <category android:name="android.intent.category.LAUNCHER" />
+                    </intent-filter>
+                </activity>
+            </application>
+        </manifest>
+        EOF
+
+        cat << 'EOF' > app/src/main/res/values/strings.xml
+        <resources>
+            <string name="app_name">শিহাব ম্যানুফ্যাকচারিং</string>
+        </resources>
+        EOF
+
+        cat << 'EOF' > app/src/main/res/layout/activity_main.xml
+        <?xml version="1.0" encoding="utf-8"?>
+        <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#070A10"
+            android:keepScreenOn="true">
+
+            <LinearLayout
+                android:id="@+id/layoutBoot"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:padding="24dp">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="SHIHAB MANUFACTURING"
+                    android:textColor="#E5A93C"
+                    android:textSize="32sp"
+                    android:textStyle="bold" />
+                <ProgressBar
+                    android:id="@+id/bootProgress"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="320dp"
+                    android:layout_height="14dp"
+                    android:layout_marginTop="28dp"
+                    android:max="100"
+                    android:progress="0"
+                    android:progressTint="#E5A93C" />
+                <TextView
+                    android:id="@+id/tvBootMessage"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="ইনিশিয়ালাইজ হচ্ছে... ০%"
+                    android:textColor="#95A5A6" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/layoutMainMenu"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:visibility="gone">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="শিহাব ম্যানুফ্যাকচারিং"
+                    android:textColor="#FFFFFF"
+                    android:textSize="36sp"
+                    android:textStyle="bold" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="★ মালিকানা মোড (ক্রয় ১০০% ফ্রি | বিক্রিতে নগদ আয়) ★"
+                    android:textColor="#2ECC71"
+                    android:layout_marginBottom="25dp" />
+                <Button
+                    android:id="@+id/btnEnterWorld"
+                    android:layout_width="260dp"
+                    android:layout_height="50dp"
+                    android:text="🎮 গেম শুরু করুন"
+                    android:backgroundTint="#E5A93C"
+                    android:textColor="#000000"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="10dp" />
+                <Button
+                    android:id="@+id/btnGarageView"
+                    android:layout_width="260dp"
+                    android:layout_height="50dp"
+                    android:text="🚜 গ্যারেজ (৩১টি ভারী গাড়ি)"
+                    android:backgroundTint="#1B263B"
+                    android:textColor="#FFFFFF" />
+            </LinearLayout>
+
+            <RelativeLayout
+                android:id="@+id/layoutGameplay"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="gone">
+                <FrameLayout
+                    android:id="@+id/glViewportContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" />
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="#CC0B0E14"
+                    android:padding="8dp"
+                    android:orientation="horizontal">
+                    <TextView
+                        android:id="@+id/tvBankBalance"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content"
+                        android:text="কর্পোরেট একাউন্ট: $০.০০"
+                        android:textColor="#2ECC71"
+                        android:textStyle="bold" />
+                    <TextView
+                        android:id="@+id/tvActiveEntity"
+                        android:layout_width="0dp"
+                        android:layout_weight="1.2"
+                        android:layout_height="wrap_content"
+                        android:text="চরিত্র: শিহাব (হাঁটছে)"
+                        android:textColor="#3498DB" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="কেনাকাটা ১০০% ফ্রি"
+                        android:textColor="#F1C40F" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentBottom="true"
+                    android:layout_alignParentStart="true"
+                    android:layout_margin="16dp">
+                    <Button android:id="@+id/btnPadLeft" android:layout_width="55dp" android:layout_height="55dp" android:text="◀" />
+                    <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="vertical">
+                        <Button android:id="@+id/btnPadForward" android:layout_width="55dp" android:layout_height="55dp" android:text="▲" />
+                        <Button android:id="@+id/btnPadBackward" android:layout_width="55dp" android:layout_height="55dp" android:text="▼" />
+                    </LinearLayout>
+                    <Button android:id="@+id/btnPadRight" android:layout_width="55dp" android:layout_height="55dp" android:text="▶" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentBottom="true"
+                    android:layout_alignParentEnd="true"
+                    android:layout_margin="16dp"
+                    android:orientation="vertical">
+                    <Button
+                        android:id="@+id/btnDoorInteract"
+                        android:layout_width="160dp"
+                        android:layout_height="48dp"
+                        android:text="🚪 গাড়িতে উঠুন"
+                        android:backgroundTint="#27AE60"
+                        android:textColor="#FFFFFF"
+                        android:layout_marginBottom="6dp" />
+                    <Button
+                        android:id="@+id/btnMarketTransaction"
+                        android:layout_width="160dp"
+                        android:layout_height="48dp"
+                        android:text="💰 বাজারে বিক্রি ($+)"
+                        android:backgroundTint="#2980B9"
+                        android:textColor="#FFFFFF" />
+                </LinearLayout>
+            </RelativeLayout>
+        </RelativeLayout>
+        EOF
+
+        cat << 'EOF' > app/src/main/java/com/shihab/manufacturing/MainActivity.kt
+        package com.shihab.manufacturing
+
+        import android.os.Bundle
+        import android.os.Handler
+        import android.os.Looper
+        import android.view.View
+        import android.widget.*
+        import androidx.appcompat.app.AppCompatActivity
+
+        class MainActivity : AppCompatActivity() {
+            private var charX = 0f
+            private var isDriving = false
+            private var bankBalance = 0.0
+
+            override fun onCreate(savedInstanceState: Bundle?) {
+                super.onCreate(savedInstanceState)
+                setContentView(R.layout.activity_main)
+
+                val layoutBoot: LinearLayout = findViewById(R.id.layoutBoot)
+                val layoutMainMenu: LinearLayout = findViewById(R.id.layoutMainMenu)
+                val layoutGameplay: RelativeLayout = findViewById(R.id.layoutGameplay)
+                val bootProgress: ProgressBar = findViewById(R.id.bootProgress)
+                val tvBootMessage: TextView = findViewById(R.id.tvBootMessage)
+                val tvBankBalance: TextView = findViewById(R.id.tvBankBalance)
+                val tvActiveEntity: TextView = findViewById(R.id.tvActiveEntity)
+                val btnEnterWorld: Button = findViewById(R.id.btnEnterWorld)
+                val btnGarageView: Button = findViewById(R.id.btnGarageView)
+                val btnDoorInteract: Button = findViewById(R.id.btnDoorInteract)
+                val btnMarketTransaction: Button = findViewById(R.id.btnMarketTransaction)
+
+                val btnPadForward: Button = findViewById(R.id.btnPadForward)
+                val btnPadBackward: Button = findViewById(R.id.btnPadBackward)
+                val btnPadLeft: Button = findViewById(R.id.btnPadLeft)
+                val btnPadRight: Button = findViewById(R.id.btnPadRight)
+
+                val handler = Handler(Looper.getMainLooper())
+                var p = 0
+                val runner = object : Runnable {
+                    override fun run() {
+                        if (p <= 100) {
+                            bootProgress.progress = p
+                            tvBootMessage.text = "ইনিশিয়ালাইজ হচ্ছে... $p%"
+                            p += 5
+                            handler.postDelayed(this, 80)
+                        } else {
+                            layoutBoot.visibility = View.GONE
+                            layoutMainMenu.visibility = View.VISIBLE
+                        }
+                    }
+                }
+                handler.post(runner)
+
+                btnEnterWorld.setOnClickListener {
+                    layoutMainMenu.visibility = View.GONE
+                    layoutGameplay.visibility = View.VISIBLE
+                    Toast.makeText(this, "৫-বিঘা জমিতে স্বাগতম!", Toast.LENGTH_SHORT).show()
+                }
+
+                btnGarageView.setOnClickListener {
+                    Toast.makeText(this, "৩১টি গাড়ি ও টেসলা প্রস্তুত!", Toast.LENGTH_SHORT).show()
+                }
+
+                btnDoorInteract.setOnClickListener {
+                    isDriving = !isDriving
+                    if (isDriving) {
+                        btnDoorInteract.text = "🚪 গাড়ি থেকে নামুন"
+                        tvActiveEntity.text = "চালনা করছেন: হেভি এক্সকাভেটর"
+                    } else {
+                        btnDoorInteract.text = "🚪 গাড়িতে উঠুন"
+                        tvActiveEntity.text = "চরিত্র: শিহাব (হাঁটছে)"
+                    }
+                }
+
+                btnMarketTransaction.setOnClickListener {
+                    bankBalance += 5000.0
+                    tvBankBalance.text = "কর্পোরেট একাউন্ট: $$bankBalance"
+                    Toast.makeText(this, "পণ্য বিক্রি সম্পন্ন! $৫০০০ জমা হয়েছে।", Toast.LENGTH_SHORT).show()
+                }
+
+                val moveAction = View.OnClickListener {
+                    charX += 2.0f
+                    if (!isDriving) {
+                        tvActiveEntity.text = "চরিত্র: শিহাব (পায়ে হেঁটে চলছে)"
+                    }
+                }
+                btnPadForward.setOnClickListener(moveAction)
+                btnPadBackward.setOnClickListener(moveAction)
+                btnPadLeft.setOnClickListener(moveAction)
+                btnPadRight.setOnClickListener(moveAction)
+            }
+        }
+        EOF
+
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v3
+
+    - name: Build Debug APK
+      run: gradle assembleDebug --no-daemon
+
+    - name: Upload Shihab Manufacturing APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: Shihab_Manufacturing_APK
+        path: app/build/outputs/apk/debug/app-debug.apk
+
+পেস্ট করার পর নিচে সবুজ রঙের Commit changes বাটনে চাপ দিয়ে সেভ করে দিন।
